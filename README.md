@@ -1,56 +1,150 @@
-# Welcome to your Expo app 👋
+# UberClone
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Ride-hailing mobile app built with Expo (React Native) as an academic project for the Mobile Development course at Tecnológico de Antioquia.
 
-## Get started
+**Professor:** Paula Andrea Muñoz Correa
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Tech Stack
 
-2. Start the app
+| Layer | Technology |
+|---|---|
+| Framework | Expo SDK 56 + Expo Router |
+| Language | TypeScript |
+| State | Redux Toolkit |
+| Database | Firebase Firestore |
+| Auth | Firebase Authentication |
+| Maps | react-native-maps (Google Maps SDK) |
+| Payments | Stripe + MercadoPago |
+| i18n | react-i18next (ES / EN) |
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## Prerequisites
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Node.js 18+
+- npm 10+
+- Expo Go app on your device (iOS or Android)
+- A Firebase project (see **Environment Setup** below)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## Setup
 
-When you're ready, run:
+### 1. Clone and install
 
 ```bash
-npm run reset-project
+git clone <repo-url>
+cd UberClone
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Environment variables
 
-### Other setup steps
+Copy `.env.example` to `.env` and fill in your real keys:
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+cp .env.example .env
+```
 
-## Learn more
+Required variables:
 
-To learn more about developing your project with Expo, look at the following resources:
+| Variable | Where to get it |
+|---|---|
+| `EXPO_PUBLIC_FIREBASE_API_KEY` | Firebase Console → Project Settings → Your apps |
+| `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN` | Same as above |
+| `EXPO_PUBLIC_FIREBASE_PROJECT_ID` | Same as above |
+| `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET` | Same as above |
+| `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Same as above |
+| `EXPO_PUBLIC_FIREBASE_APP_ID` | Same as above |
+| `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | Google Cloud Console → APIs & Services |
+| `EXPO_PUBLIC_GOOGLE_PLACES_API_KEY` | Google Cloud Console → APIs & Services |
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+> **Note:** Variables prefixed with `EXPO_PUBLIC_` are bundled into the client. Never store server-side secrets with this prefix.
 
-## Join the community
+### 3. Firebase project setup
 
-Join our community of developers creating universal apps.
+1. Go to [Firebase Console](https://console.firebase.google.com) and create a project.
+2. Enable **Authentication** → Email/Password sign-in method.
+3. Enable **Firestore Database** in production mode.
+4. Register a Web app and copy the config values into `.env`.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### 4. Run the app
+
+```bash
+# Start the dev server
+npm start
+
+# Open on Android
+npm run android
+
+# Open on iOS
+npm run ios
+```
+
+Scan the QR code with the **Expo Go** app on your device.
+
+---
+
+## Project Structure
+
+```
+src/
+├── app/                  # Expo Router screens (file-based routing)
+│   ├── (auth)/           # Auth stack: login, register
+│   ├── (tabs)/           # Tab navigator: home, profile
+│   └── _layout.tsx       # Root layout (Redux Provider + i18n)
+├── components/           # Reusable UI components
+├── constants/            # Theme colors, spacing, fonts
+├── hooks/                # Custom React hooks
+├── i18n/                 # Translations (en / es)
+├── navigation/           # Navigation type definitions
+├── screens/              # Screen-level components (used by app/)
+├── services/             # Firebase, API clients
+├── store/                # Redux store + slice reducers
+└── utils/                # Shared utility functions
+```
+
+---
+
+## Code Quality
+
+```bash
+# Check lint
+npm run lint
+
+# Auto-fix lint issues
+npm run lint:fix
+
+# Format code
+npm run format
+
+# Check formatting
+npm run format:check
+```
+
+Code style follows the **Airbnb JavaScript Style Guide**.
+
+---
+
+## Branch Strategy
+
+| Branch | Purpose |
+|---|---|
+| `main` | Stable, reviewed code only |
+| `phases/phase-1-*` | Phase 1 setup and auth |
+| `feature/phase-2-*` | Maps and ride booking |
+| `feature/phase-3-*` | Payments |
+
+Merges to `main` require professor review.
+
+---
+
+## Development Phases
+
+- [x] **Phase 1.1** — Project setup, folder structure, Redux, Firebase, i18n
+- [ ] **Phase 1.2** — Authentication (register, login, logout)
+- [ ] **Phase 1.3** — Profile screen
+- [ ] **Phase 2** — Maps, Google Places, ride booking
+- [ ] **Phase 3** — Payments (Stripe + MercadoPago)
