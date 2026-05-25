@@ -1,11 +1,15 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import DestinationMarker from '@/components/map/DestinationMarker';
+import SearchSheet from '@/components/map/SearchSheet';
 import UserMarker from '@/components/map/UserMarker';
 import { MAP_STYLE } from '@/constants/mapStyle';
 import { useLocation } from '@/hooks/useLocation';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { resetTrip } from '@/store/tripSlice';
 
 // Google Maps on Android, default (Apple Maps) on iOS for Expo Go compatibility.
 // Switch both to PROVIDER_GOOGLE when using a custom development build with an iOS API key.
@@ -19,11 +23,14 @@ const DEFAULT_REGION = {
 };
 
 const USER_DELTA = { latitudeDelta: 0.005, longitudeDelta: 0.005 };
+const ROUTE_DELTA = { latitudeDelta: 0.04, longitudeDelta: 0.04 };
 
 export default function HomeScreen() {
   const { coords, loading, error, refresh } = useLocation();
   const mapRef = useRef<MapView>(null);
   const insets = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
+  const destination = useAppSelector((s) => s.trip.destination);
 
   // Smooth animate to user's position once location is available
   useEffect(() => {
@@ -34,6 +41,24 @@ export default function HomeScreen() {
     );
   }, [coords]);
 
+  // Fit map to show both origin and destination when destination is set
+  useEffect(() => {
+    if (!coords || !destination || !mapRef.current) return;
+    const midLat = (coords.latitude + destination.latitude) / 2;
+    const midLng = (coords.longitude + destination.longitude) / 2;
+    const latDelta = Math.abs(coords.latitude - destination.latitude) * 2.2;
+    const lngDelta = Math.abs(coords.longitude - destination.longitude) * 2.2;
+    mapRef.current.animateToRegion(
+      {
+        latitude: midLat,
+        longitude: midLng,
+        latitudeDelta: Math.max(latDelta, ROUTE_DELTA.latitudeDelta),
+        longitudeDelta: Math.max(lngDelta, ROUTE_DELTA.longitudeDelta),
+      },
+      800,
+    );
+  }, [coords, destination]);
+
   const handleCenterOnUser = useCallback(() => {
     if (!coords || !mapRef.current) return;
     mapRef.current.animateToRegion(
@@ -41,6 +66,8 @@ export default function HomeScreen() {
       600,
     );
   }, [coords]);
+
+  const fabBottom = useMemo(() => 100 + insets.bottom, [insets.bottom]);
 
   return (
     <View style={styles.container}>
@@ -66,6 +93,16 @@ export default function HomeScreen() {
             <UserMarker />
           </Marker>
         )}
+
+        {destination && (
+          <Marker
+            coordinate={{ latitude: destination.latitude, longitude: destination.longitude }}
+            anchor={{ x: 0.5, y: 1 }}
+            tracksViewChanges={false}
+          >
+            <DestinationMarker />
+          </Marker>
+        )}
       </MapView>
 
       {/* Location loading overlay */}
@@ -86,10 +123,10 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Center-on-me FAB */}
-      {coords && (
+      {/* Center-on-me FAB — hidden when destination is shown to avoid overlap */}
+      {coords && !destination && (
         <Pressable
-          style={[styles.myLocationFab, { bottom: 100 + insets.bottom }]}
+          style={[styles.myLocationFab, { bottom: fabBottom }]}
           onPress={handleCenterOnUser}
           android_ripple={{ color: '#eee', radius: 24 }}
         >
@@ -97,14 +134,19 @@ export default function HomeScreen() {
         </Pressable>
       )}
 
-      {/* "Where to?" bottom sheet — populated in Phase 2.2 */}
-      <View style={[styles.searchSheet, { paddingBottom: insets.bottom + 8 }]}>
-        <View style={styles.sheetHandle} />
-        <Pressable style={styles.searchRow} android_ripple={{ color: '#eee' }}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <Text style={styles.searchPlaceholder}>Where to?</Text>
+      {/* Recenter FAB — shown when a destination is active */}
+      {coords && destination && (
+        <Pressable
+          style={[styles.myLocationFab, { bottom: fabBottom }]}
+          onPress={() => dispatch(resetTrip())}
+          android_ripple={{ color: '#eee', radius: 24 }}
+        >
+          <Text style={styles.fabIcon}>✕</Text>
         </Pressable>
-      </View>
+      )}
+
+      {/* Destination search bottom sheet */}
+      <SearchSheet userCoords={coords} bottomInset={insets.bottom} />
     </View>
   );
 }
@@ -179,47 +221,5 @@ const styles = StyleSheet.create({
   fabIcon: {
     fontSize: 22,
     color: '#000',
-  },
-  searchSheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 10,
-    paddingHorizontal: 20,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-  },
-  sheetHandle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#ddd',
-    marginBottom: 14,
-  },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-    gap: 12,
-    marginBottom: 8,
-  },
-  searchIcon: {
-    fontSize: 16,
-  },
-  searchPlaceholder: {
-    fontSize: 16,
-    color: '#999',
-    fontWeight: '500',
   },
 });

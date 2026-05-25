@@ -1,0 +1,369 @@
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Keyboard,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
+
+import { usePlacesSearch } from '@/hooks/usePlacesSearch';
+import { fetchPlaceDetails, Prediction } from '@/services/placesService';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { resetTrip, setDestination, setOrigin } from '@/store/tripSlice';
+import { Coordinates } from '@/hooks/useLocation';
+
+const SHEET_COLLAPSED_HEIGHT = 88;
+const SHEET_EXPANDED_HEIGHT = 520;
+const ANIMATION_DURATION = 280;
+
+interface SearchSheetProps {
+  userCoords: Coordinates | null;
+  bottomInset: number;
+}
+
+export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProps) {
+  const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const destination = useAppSelector((s) => s.trip.destination);
+
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [fetchingDetails, setFetchingDetails] = useState(false);
+  const inputRef = useRef<TextInput>(null);
+
+  const sheetHeight = useSharedValue(SHEET_COLLAPSED_HEIGHT);
+
+  const { query, predictions, loading, error, search, clear } = usePlacesSearch(userCoords);
+
+  useLayoutEffect(() => {
+    sheetHeight.value = withTiming(
+      isExpanded ? SHEET_EXPANDED_HEIGHT : SHEET_COLLAPSED_HEIGHT,
+      { duration: ANIMATION_DURATION },
+    );
+  }, [isExpanded, sheetHeight]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    height: sheetHeight.value,
+  }));
+
+  const handleOpen = useCallback(() => {
+    setIsExpanded(true);
+    setTimeout(() => inputRef.current?.focus(), ANIMATION_DURATION);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    Keyboard.dismiss();
+    setIsExpanded(false);
+    clear();
+  }, [clear]);
+
+  const handleSelectPrediction = useCallback(
+    async (prediction: Prediction) => {
+      Keyboard.dismiss();
+      setFetchingDetails(true);
+      try {
+        const details = await fetchPlaceDetails(prediction.placeId, prediction.description);
+        dispatch(setDestination(details));
+        if (userCoords) {
+          dispatch(
+            setOrigin({
+              placeId: 'current-location',
+              description: t('trip.currentLocation'),
+              latitude: userCoords.latitude,
+              longitude: userCoords.longitude,
+            }),
+          );
+        }
+        setIsExpanded(false);
+        clear();
+      } catch {
+        // silently ignore — user can retry
+      } finally {
+        setFetchingDetails(false);
+      }
+    },
+    [dispatch, userCoords, t, clear],
+  );
+
+  const handleClearDestination = useCallback(() => {
+    dispatch(resetTrip());
+  }, [dispatch]);
+
+  const listData = useMemo(() => predictions, [predictions]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: Prediction }) => (
+      <Pressable
+        style={({ pressed }) => [styles.predictionRow, pressed && styles.predictionRowPressed]}
+        onPress={() => handleSelectPrediction(item)}
+        android_ripple={{ color: '#f0f0f0' }}
+      >
+        <View style={styles.pinIcon}>
+          <Text style={styles.pinEmoji}>📍</Text>
+        </View>
+        <View style={styles.predictionTexts}>
+          <Text style={styles.predictionMain} numberOfLines={1}>
+            {item.mainText}
+          </Text>
+          {item.secondaryText ? (
+            <Text style={styles.predictionSub} numberOfLines={1}>
+              {item.secondaryText}
+            </Text>
+          ) : null}
+        </View>
+      </Pressable>
+    ),
+    [handleSelectPrediction],
+  );
+
+  return (
+    <Animated.View style={[styles.sheet, animatedStyle, { paddingBottom: bottomInset + 8 }]}>
+      <View style={styles.handle} />
+
+      {isExpanded ? (
+        <View style={styles.expandedContent}>
+          <View style={styles.searchRow}>
+            <Pressable onPress={handleClose} hitSlop={8} style={styles.backBtn}>
+              <Text style={styles.backArrow}>←</Text>
+            </Pressable>
+            <TextInput
+              ref={inputRef}
+              style={styles.input}
+              placeholder={t('trip.searchPlaceholder')}
+              placeholderTextColor="#999"
+              value={query}
+              onChangeText={search}
+              returnKeyType="search"
+              autoCorrect={false}
+            />
+            {(query.length > 0 || loading) && (
+              <Pressable onPress={clear} hitSlop={8} style={styles.clearBtn}>
+                {loading || fetchingDetails ? (
+                  <ActivityIndicator size="small" color="#999" />
+                ) : (
+                  <Text style={styles.clearIcon}>✕</Text>
+                )}
+              </Pressable>
+            )}
+          </View>
+
+          {error ? (
+            <View style={styles.statusRow}>
+              <Text style={styles.errorText}>{t('trip.searchError')}</Text>
+            </View>
+          ) : null}
+
+          {!loading && query.length > 0 && predictions.length === 0 && !error ? (
+            <View style={styles.statusRow}>
+              <Text style={styles.emptyText}>{t('trip.noResults')}</Text>
+            </View>
+          ) : null}
+
+          <FlatList
+            data={listData}
+            keyExtractor={(item) => item.placeId}
+            renderItem={renderItem}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+          />
+        </View>
+      ) : (
+        <View>
+          {destination ? (
+            <View style={styles.destinationRow}>
+              <View style={styles.destTexts}>
+                <Text style={styles.destLabel}>{t('trip.destination')}</Text>
+                <Text style={styles.destName} numberOfLines={1}>
+                  {destination.description}
+                </Text>
+              </View>
+              <Pressable onPress={handleClearDestination} hitSlop={8} style={styles.clearDestBtn}>
+                <Text style={styles.clearDestIcon}>✕</Text>
+              </Pressable>
+            </View>
+          ) : null}
+          <Pressable
+            style={styles.whereToRow}
+            onPress={handleOpen}
+            android_ripple={{ color: '#eee' }}
+          >
+            <Text style={styles.searchIconText}>🔍</Text>
+            <Text style={styles.whereToText}>{t('trip.whereTo')}</Text>
+          </Pressable>
+        </View>
+      )}
+    </Animated.View>
+  );
+}
+
+const styles = StyleSheet.create({
+  sheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 10,
+    paddingHorizontal: 20,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    overflow: 'hidden',
+  },
+  handle: {
+    alignSelf: 'center',
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#ddd',
+    marginBottom: 14,
+  },
+  whereToRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+    gap: 12,
+    marginBottom: 8,
+  },
+  searchIconText: {
+    fontSize: 16,
+  },
+  whereToText: {
+    fontSize: 16,
+    color: '#999',
+    fontWeight: '500',
+  },
+  destinationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f7ff',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 8,
+    gap: 12,
+  },
+  destTexts: {
+    flex: 1,
+  },
+  destLabel: {
+    fontSize: 11,
+    color: '#666',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  destName: {
+    fontSize: 15,
+    color: '#111',
+    fontWeight: '500',
+  },
+  clearDestBtn: {
+    padding: 4,
+  },
+  clearDestIcon: {
+    fontSize: 14,
+    color: '#666',
+  },
+  expandedContent: {
+    flex: 1,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+    gap: 8,
+  },
+  backBtn: {
+    padding: 4,
+  },
+  backArrow: {
+    fontSize: 20,
+    color: '#333',
+    fontWeight: '300',
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: '#111',
+    paddingVertical: 14,
+  },
+  clearBtn: {
+    padding: 4,
+    width: 28,
+    alignItems: 'center',
+  },
+  clearIcon: {
+    fontSize: 14,
+    color: '#888',
+  },
+  listContent: {
+    paddingBottom: 16,
+  },
+  predictionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#eee',
+    gap: 14,
+  },
+  predictionRowPressed: {
+    backgroundColor: '#f8f8f8',
+  },
+  pinIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pinEmoji: {
+    fontSize: 14,
+  },
+  predictionTexts: {
+    flex: 1,
+  },
+  predictionMain: {
+    fontSize: 15,
+    color: '#111',
+    fontWeight: '500',
+  },
+  predictionSub: {
+    fontSize: 13,
+    color: '#888',
+    marginTop: 2,
+  },
+  statusRow: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#ef4444',
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+  },
+});
