@@ -29,10 +29,19 @@ const es = {
   },
   profile: {
     title: 'Mi perfil',
-    editProfile: 'Editar perfil',
+    personalData: 'Datos personales',
+    security: 'Seguridad',
     myTrips: 'Mis viajes',
-    paymentMethods: 'Métodos de pago',
-    settings: 'Configuración',
+    saveChanges: 'Guardar cambios',
+    changePhoto: 'Cambiar foto',
+    language: 'Idioma preferido',
+    updateSuccess: 'Perfil actualizado exitosamente',
+    currentPassword: 'Contraseña actual',
+    newPassword: 'Nueva contraseña',
+    changePassword: 'Cambiar contraseña',
+    passwordUpdated: 'Contraseña actualizada exitosamente',
+    noTrips: 'Sin viajes todavía',
+    tripsComingSoon: 'Tu historial de viajes aparecerá aquí en la Fase 4.',
   },
 } as const;
 

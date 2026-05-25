@@ -29,10 +29,19 @@ const en = {
   },
   profile: {
     title: 'My Profile',
-    editProfile: 'Edit Profile',
+    personalData: 'Personal Data',
+    security: 'Security',
     myTrips: 'My Trips',
-    paymentMethods: 'Payment Methods',
-    settings: 'Settings',
+    saveChanges: 'Save Changes',
+    changePhoto: 'Change photo',
+    language: 'Preferred Language',
+    updateSuccess: 'Profile updated successfully',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    changePassword: 'Change Password',
+    passwordUpdated: 'Password updated successfully',
+    noTrips: 'No trips yet',
+    tripsComingSoon: 'Your trip history will appear here in Phase 4.',
   },
 } as const;
 
