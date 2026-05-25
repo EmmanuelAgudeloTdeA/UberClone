@@ -13,3 +13,15 @@ export interface UserProfile {
   photoURL: string;
   createdAt: Timestamp | null;
 }
+
+// Redux-safe variant (Timestamp replaced with ms number)
+export interface SerializableUserProfile {
+  uid: string;
+  fullName: string;
+  phone: string;
+  gender: Gender;
+  email: string;
+  language: Language;
+  photoURL: string;
+  createdAt: number | null;
+}
