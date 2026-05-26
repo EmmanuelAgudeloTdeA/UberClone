@@ -22,6 +22,8 @@ interface TripState {
   estimatedFare: number | null;
   status: TripStatus;
   routePoints: RoutePoint[] | null;
+  distanceKm: number | null;
+  durationMin: number | null;
 }
 
 const initialState: TripState = {
@@ -31,6 +33,8 @@ const initialState: TripState = {
   estimatedFare: null,
   status: 'idle',
   routePoints: null,
+  distanceKm: null,
+  durationMin: null,
 };
 
 const tripSlice = createSlice({
@@ -56,6 +60,12 @@ const tripSlice = createSlice({
     setRoutePoints(state, action: PayloadAction<RoutePoint[] | null>) {
       state.routePoints = action.payload;
     },
+    setDistanceKm(state, action: PayloadAction<number | null>) {
+      state.distanceKm = action.payload;
+    },
+    setDurationMin(state, action: PayloadAction<number | null>) {
+      state.durationMin = action.payload;
+    },
     resetTrip(state) {
       state.origin = null;
       state.destination = null;
@@ -63,6 +73,8 @@ const tripSlice = createSlice({
       state.estimatedFare = null;
       state.status = 'idle';
       state.routePoints = null;
+      state.distanceKm = null;
+      state.durationMin = null;
     },
   },
 });
@@ -74,6 +86,8 @@ export const {
   setEstimatedFare,
   setTripStatus,
   setRoutePoints,
+  setDistanceKm,
+  setDurationMin,
   resetTrip,
 } = tripSlice.actions;
 

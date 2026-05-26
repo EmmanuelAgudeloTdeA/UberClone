@@ -8,6 +8,7 @@ import SearchSheet from '@/components/map/SearchSheet';
 import UserMarker from '@/components/map/UserMarker';
 import { MAP_STYLE } from '@/constants/mapStyle';
 import { useDirections } from '@/hooks/useDirections';
+import { useDistanceMatrix } from '@/hooks/useDistanceMatrix';
 import { useLocation } from '@/hooks/useLocation';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { resetTrip } from '@/store/tripSlice';
@@ -36,6 +37,7 @@ export default function HomeScreen() {
   const routePoints = useAppSelector((s) => s.trip.routePoints);
 
   useDirections(origin, destination);
+  useDistanceMatrix(origin, destination);
 
   // Smooth animate to user's position once location is available
   useEffect(() => {

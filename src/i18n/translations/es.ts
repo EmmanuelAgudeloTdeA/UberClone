@@ -35,6 +35,7 @@ const es = {
     noResults: 'No se encontraron lugares',
     searchError: 'No se pudieron cargar sugerencias',
     chooseRide: 'Elige un vehículo',
+    tripInfo: '{{dist}} km · {{dur}} min',
   },
   profile: {
     title: 'Mi perfil',

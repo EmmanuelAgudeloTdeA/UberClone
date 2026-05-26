@@ -20,7 +20,7 @@ import { Coordinates } from '@/hooks/useLocation';
 import VehicleSelector from '@/components/map/VehicleSelector';
 
 const SHEET_COLLAPSED_HEIGHT = 88;
-const SHEET_TRIP_HEIGHT = 300;
+const SHEET_TRIP_HEIGHT = 340;
 const SHEET_EXPANDED_HEIGHT = 520;
 const ANIMATION_DURATION = 280;
 
@@ -33,6 +33,8 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const destination = useAppSelector((s) => s.trip.destination);
+  const distanceKm = useAppSelector((s) => s.trip.distanceKm);
+  const durationMin = useAppSelector((s) => s.trip.durationMin);
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [fetchingDetails, setFetchingDetails] = useState(false);
@@ -188,6 +190,16 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
               <Text style={styles.clearDestIcon}>✕</Text>
             </Pressable>
           </View>
+          {distanceKm !== null && durationMin !== null ? (
+            <View style={styles.tripInfoRow}>
+              <Text style={styles.tripInfoText}>
+                {t('trip.tripInfo', {
+                  dist: distanceKm.toFixed(1),
+                  dur: durationMin,
+                })}
+              </Text>
+            </View>
+          ) : null}
           <VehicleSelector />
         </View>
       ) : (
@@ -367,5 +379,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     textAlign: 'center',
+  },
+  tripInfoRow: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#eee',
+    marginBottom: 4,
+  },
+  tripInfoText: {
+    fontSize: 13,
+    color: '#555',
+    fontWeight: '500',
   },
 });

@@ -35,6 +35,7 @@ const en = {
     noResults: 'No places found',
     searchError: 'Could not load suggestions',
     chooseRide: 'Choose a ride',
+    tripInfo: '{{dist}} km · {{dur}} min',
   },
   profile: {
     title: 'My Profile',
