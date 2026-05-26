@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import {
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -51,6 +52,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     color: '#fff',
+    textAlignVertical: 'center',
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   inputError: {
     borderColor: '#e53e3e',

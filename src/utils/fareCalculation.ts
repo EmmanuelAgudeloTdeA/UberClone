@@ -21,3 +21,10 @@ export function calculateFare(
 export function formatFare(fare: number): string {
   return `$${fare.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 }
+
+export function formatDuration(totalMin: number): string {
+  if (totalMin < 60) return `${totalMin} min`;
+  const hours = Math.floor(totalMin / 60);
+  const mins = totalMin % 60;
+  return mins === 0 ? `${hours} h` : `${hours} h ${mins} min`;
+}

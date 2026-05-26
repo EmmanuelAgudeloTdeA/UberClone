@@ -11,26 +11,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import TripCard from '@/components/TripCard';
+import { useAuth } from '@/hooks/useAuth';
 import { fetchTripHistory, TripRecord } from '@/services/tripService';
 
 export default function TripsTab() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [trips, setTrips] = useState<TripRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const loadTrips = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
-    setError(false);
+    setErrorMsg(null);
     try {
-      const data = await fetchTripHistory();
+      const data = await fetchTripHistory(user.uid);
       setTrips(data);
-    } catch {
-      setError(true);
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Could not load trips');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     loadTrips();
@@ -44,11 +47,12 @@ export default function TripsTab() {
     );
   }
 
-  if (error) {
+  if (errorMsg) {
     return (
       <View style={styles.center}>
         <Ionicons name="cloud-offline-outline" size={48} color="#555" />
         <Text style={styles.emptyTitle}>{t('profile.tripsError')}</Text>
+        <Text style={styles.errorDetail}>{errorMsg}</Text>
         <Pressable style={styles.retryBtn} onPress={loadTrips} hitSlop={8}>
           <Text style={styles.retryText}>{t('common.retry')}</Text>
         </Pressable>
@@ -96,6 +100,13 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  errorDetail: {
+    fontSize: 11,
+    color: '#f87171',
+    textAlign: 'center',
+    fontFamily: 'monospace',
+    paddingHorizontal: 8,
   },
   retryBtn: {
     marginTop: 4,

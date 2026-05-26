@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface Coordinates {
   latitude: number;
@@ -21,9 +21,14 @@ export function useLocation(): UseLocationResult {
   const [error, setError] = useState<string | null>(null);
   const [permissionGranted, setPermissionGranted] = useState(false);
 
-  const fetchLocation = useCallback(async () => {
+  const subscriptionRef = useRef<Location.LocationSubscription | null>(null);
+
+  const startWatching = useCallback(async () => {
     setLoading(true);
     setError(null);
+
+    subscriptionRef.current?.remove();
+    subscriptionRef.current = null;
 
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -32,29 +37,52 @@ export function useLocation(): UseLocationResult {
 
       if (!granted) {
         setError('Location permission denied. Enable it in your device settings.');
+        setLoading(false);
         return;
       }
 
-      const position = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
+      // Show last known position immediately while GPS warms up
+      const last = await Location.getLastKnownPositionAsync({ maxAge: 60_000 });
+      if (last) {
+        setCoords({
+          latitude: last.coords.latitude,
+          longitude: last.coords.longitude,
+          accuracy: last.coords.accuracy ?? undefined,
+        });
+        setLoading(false);
+      }
 
-      setCoords({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy ?? undefined,
-      });
+      // Watch for live updates — Balanced uses WiFi/cell (works indoors)
+      subscriptionRef.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          distanceInterval: 15,
+          timeInterval: 5000,
+        },
+        (position) => {
+          setCoords({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy ?? undefined,
+          });
+          setLoading(false);
+          setError(null);
+        },
+      );
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to get your location.';
       setError(message);
-    } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchLocation();
-  }, [fetchLocation]);
+    startWatching();
+    return () => {
+      subscriptionRef.current?.remove();
+      subscriptionRef.current = null;
+    };
+  }, [startWatching]);
 
-  return { coords, loading, error, permissionGranted, refresh: fetchLocation };
+  return { coords, loading, error, permissionGranted, refresh: startWatching };
 }
