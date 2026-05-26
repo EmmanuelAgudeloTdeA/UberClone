@@ -36,7 +36,7 @@ export default function SecurityTab() {
   const handleChange = useCallback(async () => {
     const newErr = validatePassword(newPassword) ?? undefined;
     const confirmErr = validateConfirmPassword(newPassword, confirmPassword) ?? undefined;
-    const currentErr = currentPassword.trim() === '' ? 'Current password is required' : undefined;
+    const currentErr = currentPassword.trim() === '' ? t('profile.passwordRequired') : undefined;
 
     if (currentErr || newErr || confirmErr) {
       setErrors({ current: currentErr, new: newErr, confirm: confirmErr });
@@ -52,8 +52,8 @@ export default function SecurityTab() {
       setConfirmPassword('');
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to change password';
-      Alert.alert('Error', msg);
+      const msg = err instanceof Error ? err.message : t('profile.passwordChangeFailed');
+      Alert.alert(t('common.error'), msg);
     } finally {
       setLoading(false);
     }

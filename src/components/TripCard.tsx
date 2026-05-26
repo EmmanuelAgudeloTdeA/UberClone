@@ -4,13 +4,20 @@ import { useTranslation } from 'react-i18next';
 
 import { TripRecord } from '@/services/tripService';
 import { formatFare } from '@/utils/fareCalculation';
+import { VehicleType } from '@/store/tripSlice';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
-const VEHICLE_ICONS: Record<TripRecord['vehicleType'], IoniconsName> = {
+const VEHICLE_ICONS: Record<VehicleType, IoniconsName> = {
   economy: 'car-outline',
   xl: 'car',
   premium: 'car-sport-outline',
+};
+
+const VEHICLE_NAME_KEYS: Record<VehicleType, 'trip.vehicleEconomy' | 'trip.vehicleXl' | 'trip.vehiclePremium'> = {
+  economy: 'trip.vehicleEconomy',
+  xl: 'trip.vehicleXl',
+  premium: 'trip.vehiclePremium',
 };
 
 interface Props {
@@ -24,16 +31,14 @@ function formatDate(ts: TripRecord['date']): string {
 
 export default function TripCard({ trip }: Props) {
   const { t } = useTranslation();
-  const iconName = VEHICLE_ICONS[trip.vehicleType];
-  const vehicleLabel = t(`profile.vehicle${trip.vehicleType.charAt(0).toUpperCase()}${trip.vehicleType.slice(1)}` as never);
 
   return (
     <View style={styles.card}>
       <View style={styles.header}>
         <View style={styles.vehicleBadge}>
-          <Ionicons name={iconName} size={18} color="#fff" />
+          <Ionicons name={VEHICLE_ICONS[trip.vehicleType]} size={18} color="#fff" />
         </View>
-        <Text style={styles.vehicleLabel}>{vehicleLabel}</Text>
+        <Text style={styles.vehicleLabel}>{t(VEHICLE_NAME_KEYS[trip.vehicleType])}</Text>
         <Text style={styles.date}>{formatDate(trip.date)}</Text>
       </View>
 
