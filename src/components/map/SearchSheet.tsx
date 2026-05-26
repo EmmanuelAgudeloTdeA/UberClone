@@ -15,12 +15,12 @@ import { useTranslation } from 'react-i18next';
 import { usePlacesSearch } from '@/hooks/usePlacesSearch';
 import { fetchPlaceDetails, Prediction } from '@/services/placesService';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { resetTrip, setDestination, setOrigin } from '@/store/tripSlice';
+import { resetTrip, setDestination, setOrigin, setTripStatus } from '@/store/tripSlice';
 import { Coordinates } from '@/hooks/useLocation';
 import VehicleSelector from '@/components/map/VehicleSelector';
 
 const SHEET_COLLAPSED_HEIGHT = 88;
-const SHEET_TRIP_HEIGHT = 300;
+const SHEET_TRIP_HEIGHT = 420;
 const SHEET_EXPANDED_HEIGHT = 520;
 const ANIMATION_DURATION = 280;
 
@@ -33,6 +33,11 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const destination = useAppSelector((s) => s.trip.destination);
+  const distanceKm = useAppSelector((s) => s.trip.distanceKm);
+  const durationMin = useAppSelector((s) => s.trip.durationMin);
+  const selectedVehicle = useAppSelector((s) => s.trip.selectedVehicle);
+  const origin = useAppSelector((s) => s.trip.origin);
+  const estimatedFare = useAppSelector((s) => s.trip.estimatedFare);
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [fetchingDetails, setFetchingDetails] = useState(false);
@@ -95,6 +100,11 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
   const handleClearDestination = useCallback(() => {
     dispatch(resetTrip());
   }, [dispatch]);
+
+  const handleRequestRide = useCallback(() => {
+    console.log('Ride requested:', { origin, destination, selectedVehicle, estimatedFare });
+    dispatch(setTripStatus('confirmed'));
+  }, [origin, destination, selectedVehicle, estimatedFare, dispatch]);
 
   const listData = useMemo(() => predictions, [predictions]);
 
@@ -188,7 +198,25 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
               <Text style={styles.clearDestIcon}>✕</Text>
             </Pressable>
           </View>
+          {distanceKm !== null && durationMin !== null ? (
+            <View style={styles.tripInfoRow}>
+              <Text style={styles.tripInfoText}>
+                {t('trip.tripInfo', {
+                  dist: distanceKm.toFixed(1),
+                  dur: durationMin,
+                })}
+              </Text>
+            </View>
+          ) : null}
           <VehicleSelector />
+          <Pressable
+            style={[styles.requestBtn, !selectedVehicle && styles.requestBtnDisabled]}
+            onPress={handleRequestRide}
+            disabled={!selectedVehicle}
+            android_ripple={{ color: '#333' }}
+          >
+            <Text style={styles.requestBtnText}>{t('trip.requestRide')}</Text>
+          </Pressable>
         </View>
       ) : (
         <Pressable
@@ -367,5 +395,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     textAlign: 'center',
+  },
+  tripInfoRow: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#eee',
+    marginBottom: 4,
+  },
+  tripInfoText: {
+    fontSize: 13,
+    color: '#555',
+    fontWeight: '500',
+  },
+  requestBtn: {
+    marginTop: 14,
+    backgroundColor: '#111',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  requestBtnDisabled: {
+    backgroundColor: '#ccc',
+  },
+  requestBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
