@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { usePlacesSearch } from '@/hooks/usePlacesSearch';
@@ -116,7 +117,7 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
         android_ripple={{ color: '#f0f0f0' }}
       >
         <View style={styles.pinIcon}>
-          <Text style={styles.pinEmoji}>📍</Text>
+          <Ionicons name="location-sharp" size={16} color="#555" />
         </View>
         <View style={styles.predictionTexts}>
           <Text style={styles.predictionMain} numberOfLines={1}>
@@ -141,7 +142,7 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
         <View style={styles.expandedContent}>
           <View style={styles.searchRow}>
             <Pressable onPress={handleClose} hitSlop={8} style={styles.backBtn}>
-              <Text style={styles.backArrow}>←</Text>
+              <Ionicons name="arrow-back" size={22} color="#333" />
             </Pressable>
             <TextInput
               ref={inputRef}
@@ -158,7 +159,7 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
                 {loading || fetchingDetails ? (
                   <ActivityIndicator size="small" color="#999" />
                 ) : (
-                  <Text style={styles.clearIcon}>✕</Text>
+                  <Ionicons name="close" size={16} color="#888" />
                 )}
               </Pressable>
             )}
@@ -195,7 +196,7 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
               </Text>
             </View>
             <Pressable onPress={handleClearDestination} hitSlop={8} style={styles.clearDestBtn}>
-              <Text style={styles.clearDestIcon}>✕</Text>
+              <Ionicons name="close" size={16} color="#666" />
             </Pressable>
           </View>
           {distanceKm !== null && durationMin !== null ? (
@@ -224,7 +225,7 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
           onPress={handleOpen}
           android_ripple={{ color: '#eee' }}
         >
-          <Text style={styles.searchIconText}>🔍</Text>
+          <Ionicons name="search" size={18} color="#999" />
           <Text style={styles.whereToText}>{t('trip.whereTo')}</Text>
         </Pressable>
       )}
@@ -268,9 +269,6 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 8,
   },
-  searchIconText: {
-    fontSize: 16,
-  },
   whereToText: {
     fontSize: 16,
     color: '#999',
@@ -305,10 +303,6 @@ const styles = StyleSheet.create({
   clearDestBtn: {
     padding: 4,
   },
-  clearDestIcon: {
-    fontSize: 14,
-    color: '#666',
-  },
   expandedContent: {
     flex: 1,
   },
@@ -324,11 +318,6 @@ const styles = StyleSheet.create({
   backBtn: {
     padding: 4,
   },
-  backArrow: {
-    fontSize: 20,
-    color: '#333',
-    fontWeight: '300',
-  },
   input: {
     flex: 1,
     fontSize: 16,
@@ -339,10 +328,6 @@ const styles = StyleSheet.create({
     padding: 4,
     width: 28,
     alignItems: 'center',
-  },
-  clearIcon: {
-    fontSize: 14,
-    color: '#888',
   },
   listContent: {
     paddingBottom: 16,
@@ -365,9 +350,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  pinEmoji: {
-    fontSize: 14,
   },
   predictionTexts: {
     flex: 1,

@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function DriverMarker() {
   return (
     <View style={styles.container}>
       <View style={styles.bubble}>
-        <Text style={styles.icon}>🚕</Text>
+        <MaterialCommunityIcons name="taxi" size={22} color="#fff" />
       </View>
       <View style={styles.tail} />
     </View>
@@ -27,9 +28,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-  },
-  icon: {
-    fontSize: 20,
   },
   tail: {
     width: 0,

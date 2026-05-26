@@ -3,6 +3,7 @@ import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from '
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import DestinationMarker from '@/components/map/DestinationMarker';
@@ -192,7 +193,7 @@ export default function HomeScreen() {
           onPress={handleCenterOnUser}
           android_ripple={{ color: '#eee', radius: 24 }}
         >
-          <Text style={styles.fabIcon}>⦿</Text>
+          <Ionicons name="navigate" size={22} color="#000" />
         </Pressable>
       )}
 
@@ -202,7 +203,7 @@ export default function HomeScreen() {
           onPress={() => dispatch(resetTrip())}
           android_ripple={{ color: '#eee', radius: 24 }}
         >
-          <Text style={styles.fabIcon}>✕</Text>
+          <Ionicons name="close" size={22} color="#000" />
         </Pressable>
       )}
 
@@ -304,9 +305,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.22,
     shadowRadius: 5,
-  },
-  fabIcon: {
-    fontSize: 22,
-    color: '#000',
   },
 });
