@@ -1,21 +1,24 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setEstimatedFare, setSelectedVehicle, VehicleType } from '@/store/tripSlice';
-import { calculateFare, formatFare, VEHICLE_MULTIPLIERS } from '@/utils/fareCalculation';
+import { calculateFare, formatFare } from '@/utils/fareCalculation';
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 interface VehicleOption {
   type: VehicleType;
-  icon: string;
+  iconName: IoniconsName;
   name: string;
   eta: string;
 }
 
 const VEHICLES: VehicleOption[] = [
-  { type: 'economy', icon: '🚗', name: 'Economy', eta: '~5 min' },
-  { type: 'xl', icon: '🚙', name: 'XL', eta: '~8 min' },
-  { type: 'premium', icon: '🚘', name: 'Premium', eta: '~10 min' },
+  { type: 'economy', iconName: 'car-outline', name: 'Economy', eta: '~5 min' },
+  { type: 'xl', iconName: 'car', name: 'XL', eta: '~8 min' },
+  { type: 'premium', iconName: 'car-sport-outline', name: 'Premium', eta: '~10 min' },
 ];
 
 export default function VehicleSelector() {
@@ -44,14 +47,16 @@ export default function VehicleSelector() {
               onPress={() => {
                 dispatch(setSelectedVehicle(v.type));
                 if (hasFareData) {
-                  dispatch(
-                    setEstimatedFare(calculateFare(distanceKm!, durationMin!, v.type)),
-                  );
+                  dispatch(setEstimatedFare(calculateFare(distanceKm!, durationMin!, v.type)));
                 }
               }}
               android_ripple={{ color: '#555', radius: 60 }}
             >
-              <Text style={styles.icon}>{v.icon}</Text>
+              <Ionicons
+                name={v.iconName}
+                size={28}
+                color={isSelected ? '#fff' : '#111'}
+              />
               <Text style={[styles.name, isSelected && styles.textLight]}>{v.name}</Text>
               {fare ? (
                 <Text style={[styles.fare, isSelected && styles.textLight]}>{fare}</Text>
@@ -93,9 +98,6 @@ const styles = StyleSheet.create({
   cardSelected: {
     backgroundColor: '#111',
   },
-  icon: {
-    fontSize: 26,
-  },
   name: {
     fontSize: 13,
     fontWeight: '700',
@@ -117,5 +119,3 @@ const styles = StyleSheet.create({
     color: '#aaa',
   },
 });
-
-export { VEHICLE_MULTIPLIERS };

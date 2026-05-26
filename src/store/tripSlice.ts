@@ -13,7 +13,19 @@ export interface PlaceResult {
 
 export type VehicleType = 'economy' | 'xl' | 'premium';
 
-export type TripStatus = 'idle' | 'searching' | 'confirmed';
+export type TripStatus =
+  | 'idle'
+  | 'searching'
+  | 'confirmed'
+  | 'finding_driver'
+  | 'driver_en_route'
+  | 'arrived'
+  | 'completed';
+
+export interface DriverPosition {
+  latitude: number;
+  longitude: number;
+}
 
 interface TripState {
   origin: PlaceResult | null;
@@ -24,6 +36,7 @@ interface TripState {
   routePoints: RoutePoint[] | null;
   distanceKm: number | null;
   durationMin: number | null;
+  driverPosition: DriverPosition | null;
 }
 
 const initialState: TripState = {
@@ -35,6 +48,7 @@ const initialState: TripState = {
   routePoints: null,
   distanceKm: null,
   durationMin: null,
+  driverPosition: null,
 };
 
 const tripSlice = createSlice({
@@ -66,6 +80,9 @@ const tripSlice = createSlice({
     setDurationMin(state, action: PayloadAction<number | null>) {
       state.durationMin = action.payload;
     },
+    setDriverPosition(state, action: PayloadAction<DriverPosition | null>) {
+      state.driverPosition = action.payload;
+    },
     resetTrip(state) {
       state.origin = null;
       state.destination = null;
@@ -75,6 +92,7 @@ const tripSlice = createSlice({
       state.routePoints = null;
       state.distanceKm = null;
       state.durationMin = null;
+      state.driverPosition = null;
     },
   },
 });
@@ -88,6 +106,7 @@ export const {
   setRoutePoints,
   setDistanceKm,
   setDurationMin,
+  setDriverPosition,
   resetTrip,
 } = tripSlice.actions;
 

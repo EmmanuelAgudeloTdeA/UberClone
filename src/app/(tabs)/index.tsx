@@ -2,13 +2,18 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import DestinationMarker from '@/components/map/DestinationMarker';
+import DriverMarker from '@/components/map/DriverMarker';
 import SearchSheet from '@/components/map/SearchSheet';
 import UserMarker from '@/components/map/UserMarker';
 import { MAP_STYLE } from '@/constants/mapStyle';
 import { useDirections } from '@/hooks/useDirections';
 import { useDistanceMatrix } from '@/hooks/useDistanceMatrix';
+import { useDriverSimulation } from '@/hooks/useDriverSimulation';
 import { useLocation } from '@/hooks/useLocation';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { resetTrip } from '@/store/tripSlice';
@@ -27,17 +32,34 @@ const DEFAULT_REGION = {
 const USER_DELTA = { latitudeDelta: 0.005, longitudeDelta: 0.005 };
 const ROUTE_DELTA = { latitudeDelta: 0.04, longitudeDelta: 0.04 };
 
+const DRIVER_ACTIVE_STATUSES = new Set(['finding_driver', 'driver_en_route', 'arrived']);
+
 export default function HomeScreen() {
+  const { t } = useTranslation();
+  const router = useRouter();
   const { coords, loading, error, refresh } = useLocation();
   const mapRef = useRef<MapView>(null);
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
+
   const origin = useAppSelector((s) => s.trip.origin);
   const destination = useAppSelector((s) => s.trip.destination);
   const routePoints = useAppSelector((s) => s.trip.routePoints);
+  const driverPosition = useAppSelector((s) => s.trip.driverPosition);
+  const status = useAppSelector((s) => s.trip.status);
 
   useDirections(origin, destination);
   useDistanceMatrix(origin, destination);
+  useDriverSimulation(coords);
+
+  const isDriverActive = DRIVER_ACTIVE_STATUSES.has(status);
+
+  // Navigate to payment when driver arrives
+  useEffect(() => {
+    if (status === 'arrived') {
+      router.push('/payment');
+    }
+  }, [status, router]);
 
   // Smooth animate to user's position once location is available
   useEffect(() => {
@@ -76,6 +98,13 @@ export default function HomeScreen() {
 
   const fabBottom = useMemo(() => 100 + insets.bottom, [insets.bottom]);
 
+  const driverStatusLabel = useMemo(() => {
+    if (status === 'finding_driver') return t('trip.findingDriver');
+    if (status === 'driver_en_route') return t('trip.driverEnRoute');
+    if (status === 'arrived') return t('trip.driverArrived');
+    return null;
+  }, [status, t]);
+
   return (
     <View style={styles.container}>
       {/* Full-screen map */}
@@ -102,11 +131,7 @@ export default function HomeScreen() {
         )}
 
         {routePoints && (
-          <Polyline
-            coordinates={routePoints}
-            strokeColor="#4285F4"
-            strokeWidth={4}
-          />
+          <Polyline coordinates={routePoints} strokeColor="#4285F4" strokeWidth={4} />
         )}
 
         {destination && (
@@ -116,6 +141,16 @@ export default function HomeScreen() {
             tracksViewChanges={false}
           >
             <DestinationMarker />
+          </Marker>
+        )}
+
+        {driverPosition && (
+          <Marker
+            coordinate={driverPosition}
+            anchor={{ x: 0.5, y: 1 }}
+            tracksViewChanges
+          >
+            <DriverMarker />
           </Marker>
         )}
       </MapView>
@@ -138,30 +173,42 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Center-on-me FAB — hidden when destination is shown to avoid overlap */}
-      {coords && !destination && (
+      {/* Driver status bar */}
+      {isDriverActive && driverStatusLabel ? (
+        <View style={[styles.statusBar, { top: insets.top + 12 }]}>
+          <ActivityIndicator
+            size="small"
+            color="#fff"
+            style={styles.statusSpinner}
+            animating={status !== 'arrived'}
+          />
+          <Text style={styles.statusText}>{driverStatusLabel}</Text>
+        </View>
+      ) : null}
+
+      {/* FABs — hidden while driver is active */}
+      {!isDriverActive && coords && !destination && (
         <Pressable
           style={[styles.myLocationFab, { bottom: fabBottom }]}
           onPress={handleCenterOnUser}
           android_ripple={{ color: '#eee', radius: 24 }}
         >
-          <Text style={styles.fabIcon}>⦿</Text>
+          <Ionicons name="navigate" size={22} color="#000" />
         </Pressable>
       )}
 
-      {/* Recenter FAB — shown when a destination is active */}
-      {coords && destination && (
+      {!isDriverActive && coords && destination && (
         <Pressable
           style={[styles.myLocationFab, { bottom: fabBottom }]}
           onPress={() => dispatch(resetTrip())}
           android_ripple={{ color: '#eee', radius: 24 }}
         >
-          <Text style={styles.fabIcon}>✕</Text>
+          <Ionicons name="close" size={22} color="#000" />
         </Pressable>
       )}
 
-      {/* Destination search bottom sheet */}
-      <SearchSheet userCoords={coords} bottomInset={insets.bottom} />
+      {/* Destination search bottom sheet — hidden while driver is active */}
+      {!isDriverActive && <SearchSheet userCoords={coords} bottomInset={insets.bottom} />}
     </View>
   );
 }
@@ -218,6 +265,32 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
+  statusBar: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#111',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    gap: 10,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  statusSpinner: {
+    width: 20,
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
   myLocationFab: {
     position: 'absolute',
     right: 16,
@@ -232,9 +305,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.22,
     shadowRadius: 5,
-  },
-  fabIcon: {
-    fontSize: 22,
-    color: '#000',
   },
 });
