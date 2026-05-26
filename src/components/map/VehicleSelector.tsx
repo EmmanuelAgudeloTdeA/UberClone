@@ -11,15 +11,25 @@ type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 interface VehicleOption {
   type: VehicleType;
   iconName: IoniconsName;
-  name: string;
-  eta: string;
 }
 
 const VEHICLES: VehicleOption[] = [
-  { type: 'economy', iconName: 'car-outline', name: 'Economy', eta: '~5 min' },
-  { type: 'xl', iconName: 'car', name: 'XL', eta: '~8 min' },
-  { type: 'premium', iconName: 'car-sport-outline', name: 'Premium', eta: '~10 min' },
+  { type: 'economy', iconName: 'car-outline' },
+  { type: 'xl', iconName: 'car' },
+  { type: 'premium', iconName: 'car-sport-outline' },
 ];
+
+const VEHICLE_NAME_KEYS: Record<VehicleType, 'trip.vehicleEconomy' | 'trip.vehicleXl' | 'trip.vehiclePremium'> = {
+  economy: 'trip.vehicleEconomy',
+  xl: 'trip.vehicleXl',
+  premium: 'trip.vehiclePremium',
+};
+
+const VEHICLE_ETA_KEYS: Record<VehicleType, 'trip.vehicleEconomyEta' | 'trip.vehicleXlEta' | 'trip.vehiclePremiumEta'> = {
+  economy: 'trip.vehicleEconomyEta',
+  xl: 'trip.vehicleXlEta',
+  premium: 'trip.vehiclePremiumEta',
+};
 
 export default function VehicleSelector() {
   const { t } = useTranslation();
@@ -52,16 +62,16 @@ export default function VehicleSelector() {
               }}
               android_ripple={{ color: '#555', radius: 60 }}
             >
-              <Ionicons
-                name={v.iconName}
-                size={28}
-                color={isSelected ? '#fff' : '#111'}
-              />
-              <Text style={[styles.name, isSelected && styles.textLight]}>{v.name}</Text>
+              <Ionicons name={v.iconName} size={28} color={isSelected ? '#fff' : '#111'} />
+              <Text style={[styles.name, isSelected && styles.textLight]}>
+                {t(VEHICLE_NAME_KEYS[v.type])}
+              </Text>
               {fare ? (
                 <Text style={[styles.fare, isSelected && styles.textLight]}>{fare}</Text>
               ) : null}
-              <Text style={[styles.eta, isSelected && styles.etaSelected]}>{v.eta}</Text>
+              <Text style={[styles.eta, isSelected && styles.etaSelected]}>
+                {t(VEHICLE_ETA_KEYS[v.type])}
+              </Text>
             </Pressable>
           );
         })}

@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { usePlacesSearch } from '@/hooks/usePlacesSearch';
+import logger from '@/utils/logger';
 import { fetchPlaceDetails, Prediction } from '@/services/placesService';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { resetTrip, setDestination, setOrigin, setTripStatus } from '@/store/tripSlice';
@@ -103,7 +104,7 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
   }, [dispatch]);
 
   const handleRequestRide = useCallback(() => {
-    console.log('Ride requested:', { origin, destination, selectedVehicle, estimatedFare });
+    logger.log('Ride requested:', { origin, destination, selectedVehicle, estimatedFare });
     dispatch(setTripStatus('finding_driver'));
   }, [origin, destination, selectedVehicle, estimatedFare, dispatch]);
 

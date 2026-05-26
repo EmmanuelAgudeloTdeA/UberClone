@@ -96,11 +96,13 @@ function formReducer(state: FormState, action: FormAction): FormState {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const GENDER_OPTIONS: { label: string; value: Gender }[] = [
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-  { label: 'Other', value: 'other' },
-  { label: 'Prefer not to say', value: 'prefer_not_to_say' },
+type GenderKey = 'profile.genderMale' | 'profile.genderFemale' | 'profile.genderOther' | 'profile.genderPreferNotToSay';
+
+const GENDER_OPTIONS: { labelKey: GenderKey; value: Gender }[] = [
+  { labelKey: 'profile.genderMale', value: 'male' },
+  { labelKey: 'profile.genderFemale', value: 'female' },
+  { labelKey: 'profile.genderOther', value: 'other' },
+  { labelKey: 'profile.genderPreferNotToSay', value: 'prefer_not_to_say' },
 ];
 
 const LANGUAGE_OPTIONS: { label: string; value: Language }[] = [
@@ -146,7 +148,7 @@ export default function PersonalDataTab() {
   const handlePickPhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Please allow access to your photo library.');
+      Alert.alert(t('common.permissionRequired'), t('common.photoLibraryPermission'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -204,8 +206,8 @@ export default function PersonalDataTab() {
       formDispatch({ type: 'SET_SUCCESS', value: true });
       setTimeout(() => formDispatch({ type: 'SET_SUCCESS', value: false }), 2500);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to update profile';
-      Alert.alert('Error', message);
+      const message = err instanceof Error ? err.message : t('profile.updateFailed');
+      Alert.alert(t('common.error'), message);
       setPhotoUploading(false);
       formDispatch({ type: 'SET_SAVING', value: false });
     }
@@ -237,7 +239,7 @@ export default function PersonalDataTab() {
         <View style={styles.readOnlyField}>
           <Text style={styles.readOnlyLabel}>{t('auth.email')}</Text>
           <Text style={styles.readOnlyValue}>{user?.email ?? '—'}</Text>
-          <Text style={styles.readOnlyHint}>Contact support to change your email.</Text>
+          <Text style={styles.readOnlyHint}>{t('profile.emailChangeHint')}</Text>
         </View>
 
         {/* Full name — max 50 chars */}
@@ -266,7 +268,7 @@ export default function PersonalDataTab() {
 
         {/* Gender */}
         <View style={styles.pickerGroup}>
-          <Text style={styles.pickerLabel}>Gender</Text>
+          <Text style={styles.pickerLabel}>{t('profile.genderLabel')}</Text>
           <View style={styles.optionRow}>
             {GENDER_OPTIONS.map(opt => (
               <TouchableOpacity
@@ -280,7 +282,7 @@ export default function PersonalDataTab() {
                     formState.gender === opt.value && styles.optionTextSelected,
                   ]}
                 >
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </Text>
               </TouchableOpacity>
             ))}

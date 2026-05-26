@@ -1,4 +1,4 @@
-import { addDoc, collection, Timestamp } from 'firebase/firestore';
+import { addDoc, collection, getDocs, orderBy, query, Timestamp } from 'firebase/firestore';
 
 import { auth, db } from '@/services/firebase';
 import { PlaceResult, VehicleType } from '@/store/tripSlice';
@@ -11,6 +11,14 @@ export interface TripRecord {
   paymentMethod: 'stripe' | 'mercadopago';
   date: Timestamp;
   status: 'completed';
+}
+
+export async function fetchTripHistory(): Promise<TripRecord[]> {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error('User not authenticated');
+  const q = query(collection(db, 'users', uid, 'trips'), orderBy('date', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => doc.data() as TripRecord);
 }
 
 export async function saveCompletedTrip(

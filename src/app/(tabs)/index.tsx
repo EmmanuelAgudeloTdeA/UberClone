@@ -159,7 +159,7 @@ export default function HomeScreen() {
       {loading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator color="#fff" size="large" />
-          <Text style={styles.loadingText}>Getting your location…</Text>
+          <Text style={styles.loadingText}>{t('home.gettingLocation')}</Text>
         </View>
       )}
 
@@ -168,7 +168,7 @@ export default function HomeScreen() {
         <View style={[styles.errorCard, { top: insets.top + 16 }]}>
           <Text style={styles.errorText}>{error}</Text>
           <Pressable style={styles.retryBtn} onPress={refresh} hitSlop={8}>
-            <Text style={styles.retryText}>Retry</Text>
+            <Text style={styles.retryText}>{t('common.retry')}</Text>
           </Pressable>
         </View>
       )}
