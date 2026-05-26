@@ -1,6 +1,7 @@
 import '@/i18n';
 import '@/services/firebase';
 
+import { StripeProvider } from '@stripe/stripe-react-native';
 import { useRouter, useSegments, Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { Provider } from 'react-redux';
@@ -30,14 +31,20 @@ function AuthGuard() {
 
 export default function RootLayout() {
   return (
-    <Provider store={store}>
-      <AuthProvider>
-        <AuthGuard />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack>
-      </AuthProvider>
-    </Provider>
+    <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''}>
+      <Provider store={store}>
+        <AuthProvider>
+          <AuthGuard />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="payment"
+              options={{ headerShown: true, title: 'Pagar viaje', headerBackTitle: '' }}
+            />
+          </Stack>
+        </AuthProvider>
+      </Provider>
+    </StripeProvider>
   );
 }
