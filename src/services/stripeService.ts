@@ -1,6 +1,6 @@
 import { initPaymentSheet, presentPaymentSheet } from '@stripe/stripe-react-native';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_STRIPE_BACKEND_URL ?? '';
+const BACKEND_URL = (process.env.EXPO_PUBLIC_STRIPE_BACKEND_URL ?? '').replace(/\/$/, '');
 
 export async function initStripePayment(amountCOP: number): Promise<void> {
   const res = await fetch(`${BACKEND_URL}/create-payment-intent`, {
