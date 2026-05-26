@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '',
@@ -14,9 +15,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Phase 1.2: replace with initializeAuth + custom AsyncStorage persistence
-// so auth state survives app restarts on device.
-export const auth = getAuth(app);
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+});
 
 export const db = getFirestore(app);
 
