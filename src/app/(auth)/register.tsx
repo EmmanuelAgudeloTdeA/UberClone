@@ -18,6 +18,7 @@ import Input from '@/components/Input';
 import { registerUser } from '@/services/authService';
 import { useAppDispatch } from '@/store';
 import { clearAuthError, setAuthError } from '@/store/authSlice';
+import { setProfile } from '@/store/profileSlice';
 import type { Gender, Language } from '@/types/user';
 import {
   validateConfirmPassword,
@@ -105,7 +106,17 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      await registerUser({ fullName, email, phone, password, gender, language });
+      const uid = await registerUser({ fullName, email, phone, password, gender, language });
+      dispatch(setProfile({
+        uid,
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+        gender,
+        email: email.trim().toLowerCase(),
+        language,
+        photoURL: '',
+        createdAt: Date.now(),
+      }));
       // AuthContext listener auto-redirects after registration
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Registration failed. Please try again.';
@@ -127,8 +138,8 @@ export default function RegisterScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Create account</Text>
-          <Text style={styles.subtitle}>Start riding with UberClone</Text>
+          <Text style={styles.title}>{t('auth.createAccount')}</Text>
+          <Text style={styles.subtitle}>{t('auth.startRiding')}</Text>
         </View>
 
         <View style={styles.form}>
@@ -192,7 +203,7 @@ export default function RegisterScreen() {
 
           {/* Gender picker */}
           <View style={styles.pickerGroup}>
-            <Text style={styles.pickerLabel}>Gender</Text>
+            <Text style={styles.pickerLabel}>{t('auth.genderLabel')}</Text>
             <View style={styles.optionRow}>
               {GENDER_OPTIONS.map(option => (
                 <TouchableOpacity
@@ -218,7 +229,7 @@ export default function RegisterScreen() {
 
           {/* Language picker */}
           <View style={styles.pickerGroup}>
-            <Text style={styles.pickerLabel}>Preferred Language</Text>
+            <Text style={styles.pickerLabel}>{t('auth.preferredLanguage')}</Text>
             <View style={styles.optionRow}>
               {LANGUAGE_OPTIONS.map(option => (
                 <TouchableOpacity

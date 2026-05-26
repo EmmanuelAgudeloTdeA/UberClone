@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import i18n from 'i18next';
 import { useCallback, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
@@ -187,6 +188,8 @@ export default function PersonalDataTab() {
       }
 
       await updateUserProfile(user.uid, {
+        uid: user.uid,
+        email: user.email ?? '',
         fullName: formState.fullName.trim(),
         phone: formState.phone.trim(),
         gender: formState.gender,
@@ -196,6 +199,7 @@ export default function PersonalDataTab() {
 
       if (formState.language !== profile?.language) {
         await i18n.changeLanguage(formState.language);
+        await AsyncStorage.setItem('lang', formState.language);
       }
 
       // Re-fetch to keep Redux in sync

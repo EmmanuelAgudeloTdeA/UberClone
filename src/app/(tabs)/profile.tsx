@@ -1,12 +1,20 @@
+import i18n from 'i18next';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/hooks/useAuth';
 import { fetchUserProfile } from '@/services/profileService';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { setProfile, setProfileLoading } from '@/store/profileSlice';
+import { setProfile, setProfileError, setProfileLoading } from '@/store/profileSlice';
 import PersonalDataTab from '@/screens/profile/PersonalDataTab';
 import SecurityTab from '@/screens/profile/SecurityTab';
 import TripsTab from '@/screens/profile/TripsTab';
@@ -18,6 +26,7 @@ export default function ProfileScreen() {
   const { user } = useAuth();
   const profile = useAppSelector(state => state.profile.data);
   const isLoading = useAppSelector(state => state.profile.loading);
+  const profileError = useAppSelector(state => state.profile.error);
   const dispatch = useAppDispatch();
 
   const [activeTab, setActiveTab] = useState<TabKey>('personal');
@@ -27,9 +36,17 @@ export default function ProfileScreen() {
     dispatch(setProfileLoading(true));
     try {
       const data = await fetchUserProfile(user.uid);
-      dispatch(setProfile(data));
-    } catch {
-      dispatch(setProfile(null));
+      if (data) {
+        dispatch(setProfile(data));
+        if (data.language) {
+          i18n.changeLanguage(data.language);
+        }
+      } else {
+        dispatch(setProfile(null));
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Could not load profile';
+      dispatch(setProfileError(msg));
     }
   }, [user, dispatch]);
 
@@ -70,6 +87,13 @@ export default function ProfileScreen() {
       {isLoading && !profile ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator color="#fff" size="large" />
+        </View>
+      ) : profileError && !profile ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>{profileError}</Text>
+          <Pressable style={styles.retryBtn} onPress={loadProfile} hitSlop={8}>
+            <Text style={styles.retryText}>{t('common.retry')}</Text>
+          </Pressable>
         </View>
       ) : (
         <View style={styles.content}>
@@ -131,6 +155,24 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 16,
+  },
+  errorText: {
+    color: '#f87171',
+    fontSize: 15,
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  retryBtn: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  retryText: {
+    color: '#000',
+    fontWeight: '700',
+    fontSize: 14,
   },
   content: {
     flex: 1,

@@ -17,7 +17,7 @@ export interface RegisterPayload {
   language: Language;
 }
 
-export async function registerUser(payload: RegisterPayload): Promise<void> {
+export async function registerUser(payload: RegisterPayload): Promise<string> {
   const { user } = await createUserWithEmailAndPassword(auth, payload.email, payload.password);
 
   await setDoc(doc(db, 'users', user.uid), {
@@ -30,6 +30,8 @@ export async function registerUser(payload: RegisterPayload): Promise<void> {
     photoURL: '',
     createdAt: serverTimestamp(),
   });
+
+  return user.uid;
 }
 
 export async function loginUser(email: string, password: string): Promise<void> {

@@ -1,5 +1,5 @@
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 import type { Gender, Language, SerializableUserProfile } from '@/types/user';
 import { auth, db } from './firebase';
@@ -24,6 +24,8 @@ export async function fetchUserProfile(uid: string): Promise<SerializableUserPro
 }
 
 interface ProfileUpdates {
+  uid?: string;
+  email?: string;
   fullName?: string;
   phone?: string;
   gender?: Gender;
@@ -32,7 +34,7 @@ interface ProfileUpdates {
 }
 
 export async function updateUserProfile(uid: string, updates: ProfileUpdates): Promise<void> {
-  await updateDoc(doc(db, 'users', uid), updates as Record<string, unknown>);
+  await setDoc(doc(db, 'users', uid), updates as Record<string, unknown>, { merge: true });
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────

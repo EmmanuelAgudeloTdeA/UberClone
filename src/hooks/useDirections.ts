@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
 import { fetchDirections } from '@/services/directionsService';
+import logger from '@/utils/logger';
 import { useAppDispatch } from '@/store';
 import { PlaceResult, setRoutePoints } from '@/store/tripSlice';
 
@@ -22,8 +23,10 @@ export function useDirections(
       .then((points) => {
         if (!cancelled) dispatch(setRoutePoints(points));
       })
-      .catch(() => {
-        if (!cancelled) dispatch(setRoutePoints(null));
+      .catch((err) => {
+        if (cancelled) return;
+        logger.warn('Directions API failed, no route drawn:', err?.message);
+        dispatch(setRoutePoints(null));
       });
 
     return () => {

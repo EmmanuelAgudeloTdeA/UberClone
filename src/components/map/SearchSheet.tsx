@@ -9,7 +9,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
@@ -18,12 +24,13 @@ import logger from '@/utils/logger';
 import { fetchPlaceDetails, Prediction } from '@/services/placesService';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { resetTrip, setDestination, setOrigin, setTripStatus } from '@/store/tripSlice';
+import { formatDuration, formatFare } from '@/utils/fareCalculation';
 import { Coordinates } from '@/hooks/useLocation';
 import VehicleSelector from '@/components/map/VehicleSelector';
 
-const SHEET_COLLAPSED_HEIGHT = 88;
-const SHEET_TRIP_HEIGHT = 420;
-const SHEET_EXPANDED_HEIGHT = 520;
+const SHEET_COLLAPSED_HEIGHT = 100;
+const SHEET_TRIP_HEIGHT = 480;
+const SHEET_EXPANDED_HEIGHT = 540;
 const ANIMATION_DURATION = 280;
 
 interface SearchSheetProps {
@@ -46,6 +53,8 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
   const inputRef = useRef<TextInput>(null);
 
   const sheetHeight = useSharedValue(SHEET_COLLAPSED_HEIGHT);
+  const startHeight = useSharedValue(SHEET_COLLAPSED_HEIGHT);
+  const hasDestination = useSharedValue(!!destination);
 
   const { query, predictions, loading, error, search, clear } = usePlacesSearch(userCoords);
 
@@ -54,11 +63,51 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
     if (isExpanded) target = SHEET_EXPANDED_HEIGHT;
     else if (destination) target = SHEET_TRIP_HEIGHT;
     sheetHeight.value = withTiming(target, { duration: ANIMATION_DURATION });
-  }, [isExpanded, destination, sheetHeight]);
+    hasDestination.value = !!destination;
+  }, [isExpanded, destination, sheetHeight, hasDestination]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     height: sheetHeight.value,
   }));
+
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .activeOffsetY([-10, 10])
+        .onBegin(() => {
+          startHeight.value = sheetHeight.value;
+        })
+        .onUpdate(({ translationY }) => {
+          sheetHeight.value = Math.max(
+            SHEET_COLLAPSED_HEIGHT,
+            Math.min(SHEET_EXPANDED_HEIGHT, startHeight.value - translationY),
+          );
+        })
+        .onEnd(({ velocityY }) => {
+          'worklet';
+          const current = sheetHeight.value;
+          let target: number;
+
+          if (velocityY > 600 || current < SHEET_COLLAPSED_HEIGHT + 80) {
+            target = SHEET_COLLAPSED_HEIGHT;
+            runOnJS(setIsExpanded)(false);
+          } else if (hasDestination.value) {
+            const mid = (SHEET_COLLAPSED_HEIGHT + SHEET_TRIP_HEIGHT) / 2;
+            target = current > mid ? SHEET_TRIP_HEIGHT : SHEET_COLLAPSED_HEIGHT;
+            if (target === SHEET_COLLAPSED_HEIGHT) runOnJS(setIsExpanded)(false);
+          } else if (velocityY < -600 || current > (SHEET_COLLAPSED_HEIGHT + SHEET_EXPANDED_HEIGHT) / 2) {
+            target = SHEET_EXPANDED_HEIGHT;
+            runOnJS(setIsExpanded)(true);
+          } else {
+            target = SHEET_COLLAPSED_HEIGHT;
+            runOnJS(setIsExpanded)(false);
+          }
+
+          sheetHeight.value = withTiming(target, { duration: 250 });
+        }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const handleOpen = useCallback(() => {
     setIsExpanded(true);
@@ -137,7 +186,11 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
 
   return (
     <Animated.View style={[styles.sheet, animatedStyle, { paddingBottom: bottomInset + 8 }]}>
-      <View style={styles.handle} />
+      <GestureDetector gesture={panGesture}>
+        <View style={styles.handleArea}>
+          <View style={styles.handle} />
+        </View>
+      </GestureDetector>
 
       {isExpanded ? (
         <View style={styles.expandedContent}>
@@ -205,12 +258,18 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
               <Text style={styles.tripInfoText}>
                 {t('trip.tripInfo', {
                   dist: distanceKm.toFixed(1),
-                  dur: durationMin,
+                  time: formatDuration(durationMin),
                 })}
               </Text>
             </View>
           ) : null}
           <VehicleSelector />
+          {estimatedFare !== null && selectedVehicle ? (
+            <View style={styles.fareRow}>
+              <Text style={styles.fareLabel}>{t('trip.estimatedFare')}</Text>
+              <Text style={styles.fareAmount}>{formatFare(estimatedFare)}</Text>
+            </View>
+          ) : null}
           <Pressable
             style={[styles.requestBtn, !selectedVehicle && styles.requestBtnDisabled]}
             onPress={handleRequestRide}
@@ -252,13 +311,18 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     overflow: 'hidden',
   },
+  handleArea: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    paddingTop: 2,
+    paddingBottom: 12,
+    marginBottom: 2,
+  },
   handle: {
-    alignSelf: 'center',
     width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: '#ddd',
-    marginBottom: 14,
   },
   whereToRow: {
     flexDirection: 'row',
@@ -266,9 +330,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     borderRadius: 10,
     paddingHorizontal: 16,
-    paddingVertical: 15,
+    height: 54,
     gap: 12,
-    marginBottom: 8,
   },
   whereToText: {
     fontSize: 16,
@@ -313,17 +376,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     borderRadius: 10,
     paddingHorizontal: 12,
+    paddingVertical: 6,
     marginBottom: 8,
     gap: 8,
+    minHeight: 56,
   },
   backBtn: {
-    padding: 4,
+    padding: 6,
   },
   input: {
     flex: 1,
+    height: 44,
     fontSize: 16,
     color: '#111',
-    paddingVertical: 14,
+    textAlignVertical: 'center',
   },
   clearBtn: {
     padding: 4,
@@ -390,6 +456,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#555',
     fontWeight: '500',
+  },
+  fareRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingHorizontal: 4,
+  },
+  fareLabel: {
+    fontSize: 14,
+    color: '#444',
+    fontWeight: '500',
+  },
+  fareAmount: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#111',
   },
   requestBtn: {
     marginTop: 14,

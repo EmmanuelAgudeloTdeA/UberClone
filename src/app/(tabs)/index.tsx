@@ -182,7 +182,15 @@ export default function HomeScreen() {
             style={styles.statusSpinner}
             animating={status !== 'arrived'}
           />
-          <Text style={styles.statusText}>{driverStatusLabel}</Text>
+          <Text style={[styles.statusText, styles.statusTextFlex]}>{driverStatusLabel}</Text>
+          <Pressable
+            style={styles.cancelRideBtn}
+            onPress={() => dispatch(resetTrip())}
+            hitSlop={8}
+            android_ripple={{ color: '#555', borderless: true }}
+          >
+            <Text style={styles.cancelRideText}>{t('trip.cancelRide')}</Text>
+          </Pressable>
         </View>
       ) : null}
 
@@ -271,11 +279,10 @@ const styles = StyleSheet.create({
     right: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#111',
     borderRadius: 14,
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     gap: 10,
     elevation: 6,
     shadowColor: '#000',
@@ -289,6 +296,21 @@ const styles = StyleSheet.create({
   statusText: {
     color: '#fff',
     fontSize: 15,
+    fontWeight: '600',
+  },
+  statusTextFlex: {
+    flex: 1,
+  },
+  cancelRideBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
+  },
+  cancelRideText: {
+    color: '#fff',
+    fontSize: 12,
     fontWeight: '600',
   },
   myLocationFab: {

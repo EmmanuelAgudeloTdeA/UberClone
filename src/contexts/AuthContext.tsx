@@ -48,17 +48,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const reduxDispatch = useAppDispatch();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, firebaseUser => {
-      dispatch({ type: 'SET_USER', payload: firebaseUser });
-
-      reduxDispatch(
-        setUser(
-          firebaseUser
-            ? { uid: firebaseUser.uid, email: firebaseUser.email }
-            : null,
-        ),
-      );
-    });
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      firebaseUser => {
+        dispatch({ type: 'SET_USER', payload: firebaseUser });
+        reduxDispatch(
+          setUser(
+            firebaseUser
+              ? { uid: firebaseUser.uid, email: firebaseUser.email }
+              : null,
+          ),
+        );
+      },
+      () => {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      },
+    );
 
     return unsubscribe;
   }, [reduxDispatch]);
