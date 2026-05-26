@@ -34,6 +34,7 @@ const en = {
     destination: 'Destination',
     noResults: 'No places found',
     searchError: 'Could not load suggestions',
+    chooseRide: 'Choose a ride',
   },
   profile: {
     title: 'My Profile',

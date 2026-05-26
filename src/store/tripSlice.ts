@@ -7,7 +7,7 @@ export interface PlaceResult {
   longitude: number;
 }
 
-export type VehicleType = 'economy' | 'comfort' | 'xl';
+export type VehicleType = 'economy' | 'xl' | 'premium';
 
 export type TripStatus = 'idle' | 'searching' | 'confirmed';
 

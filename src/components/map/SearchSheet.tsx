@@ -17,8 +17,10 @@ import { fetchPlaceDetails, Prediction } from '@/services/placesService';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { resetTrip, setDestination, setOrigin } from '@/store/tripSlice';
 import { Coordinates } from '@/hooks/useLocation';
+import VehicleSelector from '@/components/map/VehicleSelector';
 
 const SHEET_COLLAPSED_HEIGHT = 88;
+const SHEET_TRIP_HEIGHT = 300;
 const SHEET_EXPANDED_HEIGHT = 520;
 const ANIMATION_DURATION = 280;
 
@@ -41,11 +43,11 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
   const { query, predictions, loading, error, search, clear } = usePlacesSearch(userCoords);
 
   useLayoutEffect(() => {
-    sheetHeight.value = withTiming(
-      isExpanded ? SHEET_EXPANDED_HEIGHT : SHEET_COLLAPSED_HEIGHT,
-      { duration: ANIMATION_DURATION },
-    );
-  }, [isExpanded, sheetHeight]);
+    let target = SHEET_COLLAPSED_HEIGHT;
+    if (isExpanded) target = SHEET_EXPANDED_HEIGHT;
+    else if (destination) target = SHEET_TRIP_HEIGHT;
+    sheetHeight.value = withTiming(target, { duration: ANIMATION_DURATION });
+  }, [isExpanded, destination, sheetHeight]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     height: sheetHeight.value,
@@ -173,30 +175,30 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
             contentContainerStyle={styles.listContent}
           />
         </View>
-      ) : (
+      ) : destination ? (
         <View>
-          {destination ? (
-            <View style={styles.destinationRow}>
-              <View style={styles.destTexts}>
-                <Text style={styles.destLabel}>{t('trip.destination')}</Text>
-                <Text style={styles.destName} numberOfLines={1}>
-                  {destination.description}
-                </Text>
-              </View>
-              <Pressable onPress={handleClearDestination} hitSlop={8} style={styles.clearDestBtn}>
-                <Text style={styles.clearDestIcon}>✕</Text>
-              </Pressable>
+          <View style={styles.destinationRow}>
+            <View style={styles.destTexts}>
+              <Text style={styles.destLabel}>{t('trip.destination')}</Text>
+              <Text style={styles.destName} numberOfLines={1}>
+                {destination.description}
+              </Text>
             </View>
-          ) : null}
-          <Pressable
-            style={styles.whereToRow}
-            onPress={handleOpen}
-            android_ripple={{ color: '#eee' }}
-          >
-            <Text style={styles.searchIconText}>🔍</Text>
-            <Text style={styles.whereToText}>{t('trip.whereTo')}</Text>
-          </Pressable>
+            <Pressable onPress={handleClearDestination} hitSlop={8} style={styles.clearDestBtn}>
+              <Text style={styles.clearDestIcon}>✕</Text>
+            </Pressable>
+          </View>
+          <VehicleSelector />
         </View>
+      ) : (
+        <Pressable
+          style={styles.whereToRow}
+          onPress={handleOpen}
+          android_ripple={{ color: '#eee' }}
+        >
+          <Text style={styles.searchIconText}>🔍</Text>
+          <Text style={styles.whereToText}>{t('trip.whereTo')}</Text>
+        </Pressable>
       )}
     </Animated.View>
   );

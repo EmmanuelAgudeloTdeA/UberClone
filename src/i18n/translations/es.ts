@@ -34,6 +34,7 @@ const es = {
     destination: 'Destino',
     noResults: 'No se encontraron lugares',
     searchError: 'No se pudieron cargar sugerencias',
+    chooseRide: 'Elige un vehículo',
   },
   profile: {
     title: 'Mi perfil',
