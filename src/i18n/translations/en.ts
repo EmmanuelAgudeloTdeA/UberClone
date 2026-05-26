@@ -67,7 +67,14 @@ const en = {
     changePassword: 'Change Password',
     passwordUpdated: 'Password updated successfully',
     noTrips: 'No trips yet',
-    tripsComingSoon: 'Your trip history will appear here in Phase 4.',
+    tripsEmptySubtitle: 'Your completed trips will appear here.',
+    tripsError: 'Could not load trip history',
+    tripFrom: 'From',
+    tripTo: 'To',
+    tripFare: 'Fare',
+    vehicleEconomy: 'Economy',
+    vehicleXl: 'XL',
+    vehiclePremium: 'Premium',
   },
 } as const;
 

@@ -67,7 +67,14 @@ const es = {
     changePassword: 'Cambiar contraseña',
     passwordUpdated: 'Contraseña actualizada exitosamente',
     noTrips: 'Sin viajes todavía',
-    tripsComingSoon: 'Tu historial de viajes aparecerá aquí en la Fase 4.',
+    tripsEmptySubtitle: 'Tus viajes completados aparecerán aquí.',
+    tripsError: 'No se pudo cargar el historial',
+    tripFrom: 'Desde',
+    tripTo: 'Hasta',
+    tripFare: 'Tarifa',
+    vehicleEconomy: 'Economy',
+    vehicleXl: 'XL',
+    vehiclePremium: 'Premium',
   },
 } as const;
 
