@@ -11,6 +11,11 @@
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDbAnt8cFMtYuEw5e1BMQrZfzypuJlwj5k"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -25,6 +30,12 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow UberClone to use your location to show nearby rides."
+        }
+      ],
       [
         "expo-image-picker",
         {

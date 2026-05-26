@@ -27,6 +27,15 @@ const es = {
     greeting: '¿A dónde vas?',
     recentTrips: 'Viajes recientes',
   },
+  trip: {
+    whereTo: '¿A dónde vas?',
+    searchPlaceholder: 'Buscar destino…',
+    currentLocation: 'Tu ubicación',
+    destination: 'Destino',
+    noResults: 'No se encontraron lugares',
+    searchError: 'No se pudieron cargar sugerencias',
+    chooseRide: 'Elige un vehículo',
+  },
   profile: {
     title: 'Mi perfil',
     personalData: 'Datos personales',
