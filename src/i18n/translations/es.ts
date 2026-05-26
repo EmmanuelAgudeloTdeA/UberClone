@@ -41,6 +41,18 @@ const es = {
     driverEnRoute: 'Conductor en camino',
     driverArrived: '¡El conductor llegó!',
   },
+  payment: {
+    title: 'Resumen del viaje',
+    from: 'Desde',
+    to: 'Hasta',
+    vehicle: 'Vehículo',
+    total: 'Total',
+    chooseMethod: 'Elige tu método de pago',
+    payStripe: 'Pagar con tarjeta',
+    payMercadoPago: 'Pagar con MercadoPago',
+    processing: 'Procesando…',
+    errorTitle: 'Error en el pago',
+  },
   profile: {
     title: 'Mi perfil',
     personalData: 'Datos personales',

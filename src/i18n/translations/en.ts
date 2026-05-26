@@ -41,6 +41,18 @@ const en = {
     driverEnRoute: 'Driver en route',
     driverArrived: 'Driver arrived!',
   },
+  payment: {
+    title: 'Trip summary',
+    from: 'From',
+    to: 'To',
+    vehicle: 'Vehicle',
+    total: 'Total',
+    chooseMethod: 'Choose payment method',
+    payStripe: 'Pay with card',
+    payMercadoPago: 'Pay with MercadoPago',
+    processing: 'Processing…',
+    errorTitle: 'Payment error',
+  },
   profile: {
     title: 'My Profile',
     personalData: 'Personal Data',
