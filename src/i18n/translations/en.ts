@@ -27,6 +27,15 @@ const en = {
     greeting: 'Where to?',
     recentTrips: 'Recent Trips',
   },
+  trip: {
+    whereTo: 'Where to?',
+    searchPlaceholder: 'Search destination…',
+    currentLocation: 'Your location',
+    destination: 'Destination',
+    noResults: 'No places found',
+    searchError: 'Could not load suggestions',
+    chooseRide: 'Choose a ride',
+  },
   profile: {
     title: 'My Profile',
     personalData: 'Personal Data',
