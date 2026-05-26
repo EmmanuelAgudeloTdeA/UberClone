@@ -15,7 +15,7 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { resetTrip } from '@/store/tripSlice';
 import { initStripePayment, presentStripePayment } from '@/services/stripeService';
 import { openMercadoPagoCheckout } from '@/services/mercadopagoService';
-import { saveCompletedTrip } from '@/services/tripService';
+import { saveCompletedTripForCurrentUser } from '@/services/tripService';
 import { formatFare } from '@/utils/fareCalculation';
 
 type PaymentMethod = 'stripe' | 'mercadopago';
@@ -38,14 +38,20 @@ export default function PaymentScreen() {
 
       setProcessing(method);
       try {
-        if (method === 'stripe') {
-          await initStripePayment(estimatedFare ?? 0);
-          await presentStripePayment();
-        } else {
-          await openMercadoPagoCheckout(estimatedFare ?? 0);
+        const stripeBackend = process.env.EXPO_PUBLIC_STRIPE_BACKEND_URL ?? '';
+        const mpBackend = process.env.EXPO_PUBLIC_MERCADOPAGO_BACKEND_URL ?? '';
+        const hasBackend = method === 'stripe' ? stripeBackend.length > 0 : mpBackend.length > 0;
+
+        if (hasBackend) {
+          if (method === 'stripe') {
+            await initStripePayment(estimatedFare ?? 0);
+            await presentStripePayment();
+          } else {
+            await openMercadoPagoCheckout(estimatedFare ?? 0);
+          }
         }
 
-        await saveCompletedTrip({
+        await saveCompletedTripForCurrentUser({
           origin,
           destination,
           fare: estimatedFare ?? 0,

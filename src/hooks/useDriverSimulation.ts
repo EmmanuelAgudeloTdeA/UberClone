@@ -8,6 +8,8 @@ const FIND_DELAY_MS = 3000;
 const STEP_INTERVAL_MS = 1500;
 const DRIVER_OFFSET_KM = 2;
 
+const SIMULATION_STATUSES = new Set(['finding_driver', 'driver_en_route', 'arrived']);
+
 export function useDriverSimulation(userCoords: Coordinates | null, steps: number = 12): void {
   const dispatch = useAppDispatch();
   const status = useAppSelector((s) => s.trip.status);
@@ -20,6 +22,7 @@ export function useDriverSimulation(userCoords: Coordinates | null, steps: numbe
     coordsRef.current = userCoords;
   }, [userCoords]);
 
+  // Start simulation when status becomes 'finding_driver'
   useEffect(() => {
     if (status !== 'finding_driver' || !coordsRef.current) return;
 
@@ -35,6 +38,7 @@ export function useDriverSimulation(userCoords: Coordinates | null, steps: numbe
     dispatch(setDriverPosition(driverStart));
 
     timeoutRef.current = setTimeout(() => {
+      timeoutRef.current = null;
       dispatch(setTripStatus('driver_en_route'));
 
       const waypoints = Array.from({ length: steps }, (_, i) => {
@@ -58,11 +62,22 @@ export function useDriverSimulation(userCoords: Coordinates | null, steps: numbe
       }, STEP_INTERVAL_MS);
     }, FIND_DELAY_MS);
 
+    // Only cancel the pending timeout on cleanup — the interval must outlive
+    // the 'finding_driver' status so the driver keeps moving after dispatch.
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     };
-  // Only re-run when status becomes 'finding_driver'. coordsRef is stable via ref.
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
+  // Cancel the moving interval when the trip is reset externally (e.g. user cancels)
+  useEffect(() => {
+    if (!SIMULATION_STATUSES.has(status) && intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   }, [status]);
 }

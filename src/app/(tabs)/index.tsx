@@ -16,7 +16,7 @@ import { useDistanceMatrix } from '@/hooks/useDistanceMatrix';
 import { useDriverSimulation } from '@/hooks/useDriverSimulation';
 import { useLocation } from '@/hooks/useLocation';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { resetTrip } from '@/store/tripSlice';
+import { resetTrip, setTripStatus } from '@/store/tripSlice';
 
 // Google Maps on Android, default (Apple Maps) on iOS for Expo Go compatibility.
 // Switch both to PROVIDER_GOOGLE when using a custom development build with an iOS API key.
@@ -57,9 +57,10 @@ export default function HomeScreen() {
   // Navigate to payment when driver arrives
   useEffect(() => {
     if (status === 'arrived') {
+      dispatch(setTripStatus('completed'));
       router.push('/payment');
     }
-  }, [status, router]);
+  }, [status, dispatch, router]);
 
   // Smooth animate to user's position once location is available
   useEffect(() => {

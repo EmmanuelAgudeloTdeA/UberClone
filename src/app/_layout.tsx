@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { useRouter, useSegments, Stack } from 'expo-router';
 import i18n from 'i18next';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Provider } from 'react-redux';
 
@@ -16,19 +16,26 @@ function AuthGuard() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const routerRef = useRef(router);
+
+  useEffect(() => {
+    routerRef.current = router;
+  });
 
   useEffect(() => {
     if (loading) return;
 
-    const inAuthGroup = (segments[0] as string) === '(auth)';
-    const inTabsGroup = (segments[0] as string) === '(tabs)';
+    const seg = segments[0] as string;
+    const inAuthGroup = seg === '(auth)';
+    const inTabsGroup = seg === '(tabs)';
+    const onPayment = seg === 'payment';
 
     if (!user && !inAuthGroup) {
-      router.replace('/(auth)/login');
-    } else if (user && !inTabsGroup) {
-      router.replace('/(tabs)');
+      routerRef.current.replace('/(auth)/login');
+    } else if (user && !inTabsGroup && !onPayment) {
+      routerRef.current.replace('/(tabs)');
     }
-  }, [user, loading, segments, router]);
+  }, [user, loading, segments]);
 
   return null;
 }

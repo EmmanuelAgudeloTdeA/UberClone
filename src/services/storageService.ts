@@ -1,12 +1,15 @@
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import * as FileSystem from 'expo-file-system';
+import { getDownloadURL, ref, uploadString } from 'firebase/storage';
 
 import { storage } from './firebase';
 
-// Requires Firebase Storage to be enabled in the Firebase Console.
+// uploadBytes with a Blob fails on React Native (Firebase JS SDK uses XHR internally
+// and can't serialize RN Blobs correctly). Reading as base64 + uploadString is reliable.
 export async function uploadProfilePhoto(uid: string, localUri: string): Promise<string> {
-  const response = await fetch(localUri);
-  const blob = await response.blob();
+  const base64 = await FileSystem.readAsStringAsync(localUri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
   const storageRef = ref(storage, `users/${uid}/avatar`);
-  await uploadBytes(storageRef, blob);
+  await uploadString(storageRef, base64, 'base64');
   return getDownloadURL(storageRef);
 }
