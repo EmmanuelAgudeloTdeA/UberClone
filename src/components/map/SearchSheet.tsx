@@ -103,7 +103,7 @@ export default function SearchSheet({ userCoords, bottomInset }: SearchSheetProp
 
   const handleRequestRide = useCallback(() => {
     console.log('Ride requested:', { origin, destination, selectedVehicle, estimatedFare });
-    dispatch(setTripStatus('confirmed'));
+    dispatch(setTripStatus('finding_driver'));
   }, [origin, destination, selectedVehicle, estimatedFare, dispatch]);
 
   const listData = useMemo(() => predictions, [predictions]);

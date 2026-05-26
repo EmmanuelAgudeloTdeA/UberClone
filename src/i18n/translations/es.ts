@@ -37,6 +37,9 @@ const es = {
     chooseRide: 'Elige un vehículo',
     tripInfo: '{{dist}} km · {{dur}} min',
     requestRide: 'Solicitar viaje',
+    findingDriver: 'Buscando conductor…',
+    driverEnRoute: 'Conductor en camino',
+    driverArrived: '¡El conductor llegó!',
   },
   profile: {
     title: 'Mi perfil',
