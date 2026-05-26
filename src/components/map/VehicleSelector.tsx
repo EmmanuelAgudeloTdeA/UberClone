@@ -2,7 +2,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useAppDispatch, useAppSelector } from '@/store';
-import { setSelectedVehicle, VehicleType } from '@/store/tripSlice';
+import { setEstimatedFare, setSelectedVehicle, VehicleType } from '@/store/tripSlice';
+import { calculateFare, formatFare, VEHICLE_MULTIPLIERS } from '@/utils/fareCalculation';
 
 interface VehicleOption {
   type: VehicleType;
@@ -21,6 +22,10 @@ export default function VehicleSelector() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const selected = useAppSelector((s) => s.trip.selectedVehicle);
+  const distanceKm = useAppSelector((s) => s.trip.distanceKm);
+  const durationMin = useAppSelector((s) => s.trip.durationMin);
+
+  const hasFareData = distanceKm !== null && durationMin !== null;
 
   return (
     <View style={styles.container}>
@@ -28,15 +33,29 @@ export default function VehicleSelector() {
       <View style={styles.row}>
         {VEHICLES.map((v) => {
           const isSelected = selected === v.type;
+          const fare = hasFareData
+            ? formatFare(calculateFare(distanceKm!, durationMin!, v.type))
+            : null;
+
           return (
             <Pressable
               key={v.type}
               style={[styles.card, isSelected && styles.cardSelected]}
-              onPress={() => dispatch(setSelectedVehicle(v.type))}
+              onPress={() => {
+                dispatch(setSelectedVehicle(v.type));
+                if (hasFareData) {
+                  dispatch(
+                    setEstimatedFare(calculateFare(distanceKm!, durationMin!, v.type)),
+                  );
+                }
+              }}
               android_ripple={{ color: '#555', radius: 60 }}
             >
               <Text style={styles.icon}>{v.icon}</Text>
               <Text style={[styles.name, isSelected && styles.textLight]}>{v.name}</Text>
+              {fare ? (
+                <Text style={[styles.fare, isSelected && styles.textLight]}>{fare}</Text>
+              ) : null}
               <Text style={[styles.eta, isSelected && styles.etaSelected]}>{v.eta}</Text>
             </Pressable>
           );
@@ -65,31 +84,38 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 14,
     paddingHorizontal: 6,
     borderRadius: 14,
     backgroundColor: '#f5f5f5',
-    gap: 4,
+    gap: 3,
   },
   cardSelected: {
     backgroundColor: '#111',
   },
   icon: {
-    fontSize: 28,
+    fontSize: 26,
   },
   name: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#111',
   },
   textLight: {
     color: '#fff',
   },
-  eta: {
+  fare: {
     fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
+  },
+  eta: {
+    fontSize: 11,
     color: '#888',
   },
   etaSelected: {
     color: '#aaa',
   },
 });
+
+export { VEHICLE_MULTIPLIERS };

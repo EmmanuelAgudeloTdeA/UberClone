@@ -36,6 +36,7 @@ const es = {
     searchError: 'No se pudieron cargar sugerencias',
     chooseRide: 'Elige un vehículo',
     tripInfo: '{{dist}} km · {{dur}} min',
+    requestRide: 'Solicitar viaje',
   },
   profile: {
     title: 'Mi perfil',
