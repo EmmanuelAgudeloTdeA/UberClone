@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import DestinationMarker from '@/components/map/DestinationMarker';
 import SearchSheet from '@/components/map/SearchSheet';
 import UserMarker from '@/components/map/UserMarker';
 import { MAP_STYLE } from '@/constants/mapStyle';
+import { useDirections } from '@/hooks/useDirections';
 import { useLocation } from '@/hooks/useLocation';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { resetTrip } from '@/store/tripSlice';
@@ -30,7 +31,11 @@ export default function HomeScreen() {
   const mapRef = useRef<MapView>(null);
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
+  const origin = useAppSelector((s) => s.trip.origin);
   const destination = useAppSelector((s) => s.trip.destination);
+  const routePoints = useAppSelector((s) => s.trip.routePoints);
+
+  useDirections(origin, destination);
 
   // Smooth animate to user's position once location is available
   useEffect(() => {
@@ -92,6 +97,14 @@ export default function HomeScreen() {
           >
             <UserMarker />
           </Marker>
+        )}
+
+        {routePoints && (
+          <Polyline
+            coordinates={routePoints}
+            strokeColor="#4285F4"
+            strokeWidth={4}
+          />
         )}
 
         {destination && (

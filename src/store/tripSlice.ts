@@ -1,5 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+import { RoutePoint } from '@/services/directionsService';
+
+export type { RoutePoint };
+
 export interface PlaceResult {
   placeId: string;
   description: string;
@@ -17,6 +21,7 @@ interface TripState {
   selectedVehicle: VehicleType | null;
   estimatedFare: number | null;
   status: TripStatus;
+  routePoints: RoutePoint[] | null;
 }
 
 const initialState: TripState = {
@@ -25,6 +30,7 @@ const initialState: TripState = {
   selectedVehicle: null,
   estimatedFare: null,
   status: 'idle',
+  routePoints: null,
 };
 
 const tripSlice = createSlice({
@@ -47,12 +53,16 @@ const tripSlice = createSlice({
     setTripStatus(state, action: PayloadAction<TripStatus>) {
       state.status = action.payload;
     },
+    setRoutePoints(state, action: PayloadAction<RoutePoint[] | null>) {
+      state.routePoints = action.payload;
+    },
     resetTrip(state) {
       state.origin = null;
       state.destination = null;
       state.selectedVehicle = null;
       state.estimatedFare = null;
       state.status = 'idle';
+      state.routePoints = null;
     },
   },
 });
@@ -63,6 +73,7 @@ export const {
   setSelectedVehicle,
   setEstimatedFare,
   setTripStatus,
+  setRoutePoints,
   resetTrip,
 } = tripSlice.actions;
 
