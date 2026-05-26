@@ -1,0 +1,48 @@
+const en = {
+  common: {
+    loading: 'Loading...',
+    error: 'An error occurred',
+    retry: 'Retry',
+    cancel: 'Cancel',
+    save: 'Save',
+  },
+  auth: {
+    login: 'Log In',
+    register: 'Register',
+    logout: 'Log Out',
+    email: 'Email',
+    password: 'Password',
+    confirmPassword: 'Confirm Password',
+    name: 'Full Name',
+    phone: 'Phone Number',
+    forgotPassword: 'Forgot Password?',
+    noAccount: "Don't have an account?",
+    hasAccount: 'Already have an account?',
+  },
+  tabs: {
+    home: 'Home',
+    profile: 'Profile',
+  },
+  home: {
+    greeting: 'Where to?',
+    recentTrips: 'Recent Trips',
+  },
+  profile: {
+    title: 'My Profile',
+    personalData: 'Personal Data',
+    security: 'Security',
+    myTrips: 'My Trips',
+    saveChanges: 'Save Changes',
+    changePhoto: 'Change photo',
+    language: 'Preferred Language',
+    updateSuccess: 'Profile updated successfully',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    changePassword: 'Change Password',
+    passwordUpdated: 'Password updated successfully',
+    noTrips: 'No trips yet',
+    tripsComingSoon: 'Your trip history will appear here in Phase 4.',
+  },
+} as const;
+
+export default en;
